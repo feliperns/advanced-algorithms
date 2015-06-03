@@ -1,0 +1,2 @@
+Import("*")
+BuildTests("mapper_tests")

@@ -1,0 +1,30 @@
+def TryRunTestsAfterBuild(env, target):
+    alias = env.Alias("check", [target], target[0].abspath)
+    env.AlwaysBuild(alias)
+    
+binaries_path="#/../binaries"
+    
+def BuildDirectories(directories):
+    for directory in directories:
+        SConscript(dirs=[directory], variant_dir=binaries_path + "/" + directory)
+        
+def BuildTests(test_headers):
+    env = def_env.Clone()
+    env.Append(CPPPATH="..")
+    testgen = env.CxxTest(target="runner", source=test_headers)
+    testbld = env.Program(target="runner", source="runner.cpp")
+    Default(testgen)
+    Default(testbld)
+    TryRunTestsAfterBuild(env, testbld)
+
+def_env = Environment()
+def_env["BUILDERS"]["CxxTest"] = Builder(
+        action = "cxxtestgen --error-printer -o $TARGET $SOURCES",
+        suffix = ".cpp",
+        src_suffix = ".t.h")
+def_env.Append(CPPFLAGS=["-O2", "-std=c++11", "-Wall"])
+
+Export("binaries_path", "def_env", "BuildTests")
+
+BuildDirectories(["util"])
+
